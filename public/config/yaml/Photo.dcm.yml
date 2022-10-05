@@ -1,0 +1,26 @@
+Photo:
+    type: entity
+    table: photo
+    id:
+        id:
+            type: integer
+            nullable: false
+            options:
+                unsigned: false
+            id: true
+            generator:
+                strategy: SEQUENCE
+    fields:
+        description:
+            type: string
+            nullable: true
+            length: 2048
+            options:
+                fixed: false
+        photo:
+            type: text
+            nullable: true
+            length: null
+            options:
+                fixed: false
+    lifecycleCallbacks: {  }

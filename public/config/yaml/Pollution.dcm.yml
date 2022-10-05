@@ -1,0 +1,102 @@
+Pollution:
+    type: entity
+    table: pollution
+    id:
+        id:
+            type: integer
+            nullable: false
+            options:
+                unsigned: false
+            id: true
+            generator:
+                strategy: SEQUENCE
+    fields:
+        description:
+            type: string
+            nullable: true
+            length: 2048
+            options:
+                fixed: false
+        login:
+            type: string
+            nullable: true
+            length: 200
+            options:
+                fixed: false
+        lstPhoto:
+            type: string
+            nullable: true
+            length: 2048
+            options:
+                fixed: false
+            column: lst_photo
+        lstPollution:
+            type: string
+            nullable: true
+            length: 2048
+            options:
+                fixed: false
+            column: lst_pollution
+        pseudo:
+            type: string
+            nullable: true
+            length: 30
+            options:
+                fixed: false
+        lieu:
+            type: string
+            nullable: true
+            length: 2048
+            options:
+                fixed: false
+        dateCreation:
+            type: datetime
+            nullable: true
+            column: date_creation
+        etat:
+            type: string
+            nullable: true
+            length: 10
+            options:
+                fixed: false
+        dateDeclNet:
+            type: datetime
+            nullable: true
+            column: date_decl_net
+        lstPhotoNet:
+            type: string
+            nullable: true
+            length: 2048
+            options:
+                fixed: false
+            column: lst_photo_net
+        descriptionNet:
+            type: string
+            nullable: true
+            length: 2048
+            options:
+                fixed: false
+            column: description_net
+        pseudoNet:
+            type: string
+            nullable: true
+            length: 30
+            options:
+                fixed: false
+            column: pseudo_net
+        dateNet:
+            type: datetime
+            nullable: true
+            column: date_net
+        dateValidNet:
+            type: datetime
+            nullable: true
+            column: date_valid_net
+        commentaireNet:
+            type: string
+            nullable: true
+            length: 2048
+            options:
+                fixed: false
+            column: commentaire_net
+    lifecycleCallbacks: {  }

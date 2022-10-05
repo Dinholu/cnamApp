@@ -1,0 +1,39 @@
+Client:
+    type: entity
+    table: client
+    id:
+        idClient:
+            type: integer
+            nullable: false
+            options:
+                unsigned: false
+            id: true
+            column: id_client
+            generator:
+                strategy: SEQUENCE
+    fields:
+        nom:
+            type: string
+            nullable: true
+            length: 30
+            options:
+                fixed: false
+        prenom:
+            type: string
+            nullable: true
+            length: 30
+            options:
+                fixed: false
+        login:
+            type: string
+            nullable: true
+            length: 30
+            options:
+                fixed: false
+        password:
+            type: string
+            nullable: true
+            length: 256
+            options:
+                fixed: false
+    lifecycleCallbacks: {  }
