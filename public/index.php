@@ -1,3 +1,3 @@
 <?php
-	echo ('OkoK');
+	echo ('OikoK');
         phpinfo ();
