@@ -1,5 +1,7 @@
 FROM php:7.4-apache
 
+SET COMPOSER_ALLOW_SUPERUSER=1
+
 RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
 RUN curl -sSk https://getcomposer.org/installer | php -- --disable-tls && \
