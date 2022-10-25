@@ -4,7 +4,7 @@ RUN set COMPOSER_ALLOW_SUPERUSER=1
 
 RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
-RUN yum update && apt-get install -y zip unzip php-zip git
+RUN yum update && yim install -y zip unzip php-zip git
 
 RUN curl -sSk https://getcomposer.org/installer | php -- --disable-tls && \
    mv composer.phar /usr/local/bin/composer
