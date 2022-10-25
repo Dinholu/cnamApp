@@ -1,20 +1,19 @@
-FROM richarvey/nginx-php-fpm:1.9.1
+FROM php:7.4-apache
 
-COPY . .
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
-# Image config
-ENV SKIP_COMPOSER  ""
-ENV WEBROOT /var/www/html/public
-ENV PHP_ERRORS_STDERR 1
-ENV RUN_SCRIPTS 1
-ENV REAL_IP_HEADER 1
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends locales apt-utils git libicu-dev g++ libpng-dev libxml2-dev libzip-dev libonig-dev libxslt-dev;
 
-# Laravel config
-ENV APP_ENV production
-ENV APP_DEBUG false
-ENV LOG_CHANNEL stderr
+RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
+    echo "fr_FR.UTF-8 UTF-8" >> /etc/locale.gen && \
+    locale-gen
 
-# Allow composer to run as root
-ENV COMPOSER_ALLOW_SUPERUSER 1
+RUN curl -sSk https://getcomposer.org/installer | php -- --disable-tls && \
+   mv composer.phar /usr/local/bin/composer
 
-CMD ["/start.sh"]
+RUN docker-php-ext-configure intl
+RUN docker-php-ext-install pdo pdo_mysql gd opcache intl zip calendar dom mbstring zip gd xsl
+RUN pecl install apcu && docker-php-ext-enable apcu
+
+WORKDIR /var/www/
