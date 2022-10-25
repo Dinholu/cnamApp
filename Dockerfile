@@ -10,7 +10,6 @@ RUN curl -sSk https://getcomposer.org/installer | php -- --disable-tls && \
 
 RUN apt-get update && apt-get install -y \
     curl \
-    g++ \
     git \
     libbz2-dev \
     libfreetype6-dev \
@@ -20,7 +19,6 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     libreadline-dev \
     libzip-dev \
-    sudo \
     unzip \
     zip \
  && rm -rf /var/lib/apt/lists/*
@@ -31,6 +29,6 @@ COPY ./public/ /var/www/html
 
 WORKDIR /var/www/html
 
-CMD bash -c "composer install --prefer-dist"
+CMD bash -c "composer install"
 CMD bash -c "composer update"
 
