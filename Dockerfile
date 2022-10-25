@@ -9,8 +9,10 @@ RUN docker-php-ext-install pdo pdo_mysql
 
 RUN ls /var
 
-COPY /www/index.html /var/www
+MKDIR /var/www/html
 
-RUN ls /var/www
+COPY /www/index.html /var/www/html
+
+RUN ls /var/www/html
 
 WORKDIR /var/www/
