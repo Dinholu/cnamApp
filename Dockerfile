@@ -36,7 +36,7 @@ WORKDIR /var/www/html
 
 RUN composer update
 
-RUN ls 
+
 
 
 
