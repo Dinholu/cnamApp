@@ -7,6 +7,9 @@ use Slim\Factory\AppFactory;
 use Tuupola\Middleware\HttpBasicAuthentication;
 use \Firebase\JWT\JWT;
 
+require __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../bootstrap.php';
+
 $app = AppFactory::create();
 
 function  addHeaders (Response $response) : Response {
@@ -20,11 +23,19 @@ function  addHeaders (Response $response) : Response {
     return $response;
 }
 
+function getJWTToken($request)
+{
+    $payload = str_replace("Bearer ", "", $request->getHeader('Authorization')[0]);
+    $token = JWT::decode($payload,JWT_SECRET , array("HS256"));
+    return $token; 
+}
+
+
 function createJwt (Response $response) : Response {
     $userid = "emma";
     $email = "emma@emma.fr";
     $issuedAt = time();
-    $expirationTime = $issuedAt + 60; // jwt valid for 60 seconds from the issued time
+    $expirationTime = $issuedAt + 600; // jwt valid for 60 seconds from the issued time
     $payload = array(
         'userid' => $userid,
         'iat' => $issuedAt,
@@ -35,23 +46,114 @@ function createJwt (Response $response) : Response {
     return $response;
 }
 
-const JWT_SECRET = "MET02-CNAM";
+const JWT_SECRET = "TP-CNAM";
 
-$app->options('/api/auth/{login}', function (Request $request, Response $response, $args) {
+$app->get('/api/hello/{name}', function (Request $request, Response $response, $args) {
+    $array = [];
+    $array ["nom"] = $args ['name'];
+    $response->getBody()->write(json_encode ($array));
+    return $response;
+});
 
+$app->options('/api/catalogue', function (Request $request, Response $response, $args) {
+    
     // Evite que le front demande une confirmation à chaque modification
     $response = $response->withHeader("Access-Control-Max-Age", 600);
-
+    
     return addHeaders ($response);
 });
 
-// APi d'authentification générant un JWT
-$app->get('/api/login', function (Request $request, Response $response, $args) {   
-    $response = addHeaders ($response);
-    $response = createJwT ($response);
-    $data = array('nom' => "manu", 'prenom' => "maurice");
+// API Nécessitant un Jwt valide
+$app->get('/api/catalogue/{filtre}', function (Request $request, Response $response, $args) {
+    $filtre = $args['filtre'];
+    $flux = '[{"titre":"linux","ref":"001","prix":"20"},{"titre":"java","ref":"002","prix":"21"},{"titre":"windows","ref":"003","prix":"22"},{"titre":"angular","ref":"004","prix":"23"},{"titre":"unix","ref":"005","prix":"25"},{"titre":"javascript","ref":"006","prix":"19"},{"titre":"html","ref":"007","prix":"15"},{"titre":"css","ref":"008","prix":"10"}]';
+   
+    if ($filtre) {
+      $data = json_decode($flux, true); 
+    	
+        $res = array_filter($data, function($obj) use ($filtre)
+        { 
+            return strpos($obj["titre"], $filtre) !== false;
+        });
+        $response->getBody()->write(json_encode(array_values($res)));
+    } else {
+         $response->getBody()->write($flux);
+    }
+
     return $response;
 });
+
+// API Nécessitant un Jwt valide
+$app->get('/api/catalogue', function (Request $request, Response $response, $args) {
+    $flux = '[{"titre":"linux","ref":"001","prix":"20"},{"titre":"java","ref":"002","prix":"21"},{"titre":"windows","ref":"003","prix":"22"},{"titre":"angular","ref":"004","prix":"23"},{"titre":"unix","ref":"005","prix":"25"},{"titre":"javascript","ref":"006","prix":"19"},{"titre":"html","ref":"007","prix":"15"},{"titre":"css","ref":"008","prix":"10"}]';
+    $data = json_decode($flux, true); 
+    
+    $response->getBody()->write(json_encode($data));
+    
+    return $response;
+});
+
+$app->options('/api/user', function (Request $request, Response $response, $args) {
+    
+    // Evite que le front demande une confirmation à chaque modification
+    $response = $response->withHeader("Access-Control-Max-Age", 600);
+    
+    return addHeaders ($response);
+});
+
+// API Nécessitant un Jwt valide
+$app->get('/api/user', function (Request $request, Response $response, $args) {
+    global $entityManager;
+    
+    $payload = getJWTToken($request);
+    $login  = $payload->userid;
+    
+    $utilisateurRepository = $entityManager->getRepository('Utilisateur');
+    $utilisateur = $utilisateurRepository->findOneBy(array('login' => $login));
+    if ($utilisateur) {
+        $data = array('nom' => $utilisateur->getNom(), 'prenom' => $utilisateur->getPrenom());
+        $response = addHeaders ($response);
+        $response = createJwT ($response);
+        $response->getBody()->write(json_encode($data));
+    } else {
+        $response = $response->withStatus(401);
+    }
+
+    return $response;
+});
+
+// APi d'authentification générant un JWT
+$app->post('/api/login', function (Request $request, Response $response, $args) {   
+    global $entityManager;
+    $err=false;
+    $body = $request->getParsedBody();
+    $login = $body ['login'] ?? "";
+    $pass = $body ['pass'] ?? "";
+
+    if (!preg_match("/[a-zA-Z0-9]{1,20}/",$login))   {
+        $err = true;
+    }
+    if (!preg_match("/[a-zA-Z0-9]{1,20}/",$pass))  {
+        $err=true;
+    }
+    if (!$err) {
+        $utilisateurRepository = $entityManager->getRepository('Utilisateur');
+        $utilisateur = $utilisateurRepository->findOneBy(array('login' => $login, 'password' => $pass));
+        if ($utilisateur and $login == $utilisateur->getLogin() and $pass == $utilisateur->getPassword()) {
+            $response = addHeaders ($response);
+            $response = createJwT ($response);
+            $data = array('nom' => $utilisateur->getNom(), 'prenom' => $utilisateur->getPrenom());
+            $response->getBody()->write(json_encode($data));
+        } else {          
+            $response = $response->withStatus(401);
+        }
+    } else {
+        $response = $response->withStatus(401);
+    }
+
+    return $response;
+});
+
 
 // Middleware de validation du Jwt
 $options = [
