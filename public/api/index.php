@@ -7,9 +7,6 @@ use Slim\Factory\AppFactory;
 use Tuupola\Middleware\HttpBasicAuthentication;
 use \Firebase\JWT\JWT;
 
-require __DIR__ . '/../vendor/autoload.php';
-require_once __DIR__ . '/../bootstrap.php';
-
 $app = AppFactory::create();
 
 function  addHeaders (Response $response) : Response {
@@ -48,26 +45,6 @@ $app->options('/api/auth/{login}', function (Request $request, Response $respons
     return addHeaders ($response);
 });
 
-// API Nécessitant un Jwt valide
-$app->get('/api/auth/{login}', function (Request $request, Response $response, $args) {
-    global $entityManager;
-    
-    $login = $args['login'];
-    
-    $utilisateurRepository = $entityManager->getRepository('Utilisateur');
-    $utilisateur = $utilisateurRepository->findOneBy(array('login' => $login));
-    if ($utilisateur) {
-        $data = array('nom' => $utilisateur->getNom(), 'prenom' => $utilisateur->getPrenom());
-        $response = addHeaders ($response);
-        $response = createJwT ($response);
-        $response->getBody()->write(json_encode($data));
-    } else {
-        $response = $response->withStatus(401);
-    }
-
-    return $response;
-});
-
 // APi d'authentification générant un JWT
 $app->get('/api/login', function (Request $request, Response $response, $args) {   
     $response = addHeaders ($response);
@@ -75,39 +52,6 @@ $app->get('/api/login', function (Request $request, Response $response, $args) {
     $data = array('nom' => "manu", 'prenom' => "maurice");
     return $response;
 });
-
-// APi d'authentification générant un JWT
-$app->post('/api/login', function (Request $request, Response $response, $args) {   
-    global $entityManager;
-    $err=false;
-    $body = $request->getParsedBody();
-    $login = $body ['login'] ?? "";
-    $pass = $body ['pass'] ?? "";
-
-    if (!preg_match("/[a-zA-Z0-9]{1,20}/",$login))   {
-        $err = true;
-    }
-    if (!preg_match("/[a-zA-Z0-9]{1,20}/",$pass))  {
-        $err=true;
-    }
-    if (!$err) {
-        $utilisateurRepository = $entityManager->getRepository('Utilisateur');
-        $utilisateur = $utilisateurRepository->findOneBy(array('login' => $login, 'password' => $pass));
-        if ($utilisateur and $login == $utilisateur->getLogin() and $pass == $utilisateur->getPassword()) {
-            $response = addHeaders ($response);
-            $response = createJwT ($response);
-            $data = array('nom' => $utilisateur->getNom(), 'prenom' => $utilisateur->getPrenom());
-            $response->getBody()->write(json_encode($data));
-        } else {          
-            $response = $response->withStatus(401);
-        }
-    } else {
-        $response = $response->withStatus(401);
-    }
-
-    return $response;
-});
-
 
 // Middleware de validation du Jwt
 $options = [
