@@ -19,11 +19,14 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     libreadline-dev \
     libzip-dev \
+    libpq-dev \
     unzip \
     zip \
  && rm -rf /var/lib/apt/lists/*
- 
+  
 RUN a2enmod rewrite
+
+RUN docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql
 
 RUN docker-php-ext-install pdo pdo_pgsql
 
