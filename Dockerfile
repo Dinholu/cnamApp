@@ -4,8 +4,6 @@ RUN set COMPOSER_ALLOW_SUPERUSER=1
 
 RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
-RUN apt install unzip
-
 RUN curl -sSk https://getcomposer.org/installer | php -- --disable-tls && \
    mv composer.phar /usr/local/bin/composer
 
@@ -16,4 +14,5 @@ COPY ./public/ /var/www/html
 WORKDIR /var/www/html
 
 CMD bash -c "composer install"
+CMD bash -c "composer update"
 
