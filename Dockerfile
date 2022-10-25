@@ -13,6 +13,8 @@ COPY ./public/ /var/www/html
 
 WORKDIR /var/www/html
 
+RUN apk add -U unzip
+
 CMD bash -c "composer install"
 CMD bash -c "composer update"
 
