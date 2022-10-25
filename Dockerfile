@@ -7,14 +7,6 @@ RUN curl -sSk https://getcomposer.org/installer | php -- --disable-tls && \
 
 RUN docker-php-ext-install pdo pdo_mysql
 
-RUN cat /etc/httpd/conf/httpd.conf
+COPY /www/index.html /usr/src
 
-RUN ls /var
-
-RUN mkdir -p /var/www/html
-
-COPY /www/index.html /var/www/html
-
-RUN ls /var/www/html
-
-WORKDIR /var/www/
+WORKDIR /usr/src
