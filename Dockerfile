@@ -31,7 +31,7 @@ COPY ./public/ /var/www/html
 
 WORKDIR /var/www/html
 
-CMD bash -c "composer install"
+CMD composer update
 
 
 
