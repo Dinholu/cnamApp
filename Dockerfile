@@ -31,7 +31,7 @@ COPY ./public/ /var/www/html
 
 WORKDIR /var/www/html
 
-CMD ["composer update"]
+RUN composer update
 
 
 
