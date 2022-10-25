@@ -69,6 +69,14 @@ $app->get('/api/auth/{login}', function (Request $request, Response $response, $
 });
 
 // APi d'authentification générant un JWT
+$app->get('/api/login', function (Request $request, Response $response, $args) {   
+    $response = addHeaders ($response);
+    $response = createJwT ($response);
+    $data = array('nom' => "manu", 'prenom' => "maurice");
+    return $response;
+});
+
+// APi d'authentification générant un JWT
 $app->post('/api/login', function (Request $request, Response $response, $args) {   
     global $entityManager;
     $err=false;
