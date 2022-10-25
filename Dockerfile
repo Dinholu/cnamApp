@@ -44,6 +44,7 @@ ARG DEPS="\
         ca-certificates \
         runit \
         apache2 \
+        git \
 "
 
 RUN docker-php-ext-install pdo pdo_mysql
