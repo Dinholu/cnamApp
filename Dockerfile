@@ -36,6 +36,20 @@ WORKDIR /var/www/html
 
 RUN composer update
 
+RUN "php vendor/bin/doctrine orm:convert-mapping --namespace="" --force --from-database yml ./config/yaml"
+RUN "php vendor/bin/doctrine orm:generate-entities --generate-annotations=false --update-entities=true --generate-methods=false ./src"
+
+RUN composer update
+
+
+
+
+
+
+
+
+
+
 
 
 
