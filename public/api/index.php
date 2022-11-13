@@ -15,7 +15,7 @@ $app = AppFactory::create();
 function  addHeaders (Response $response) : Response {
     $response = $response
     ->withHeader("Content-Type", "application/json")
-    ->withHeader('Access-Control-Allow-Origin', ('https://cnam.onrender.com'))
+    ->withHeader('Access-Control-Allow-Origin', ('https://tpbackend.herokuapp.com'))
     ->withHeader('Access-Control-Allow-Headers', 'Content-Type,  Authorization')
     ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS')
     ->withHeader('Access-Control-Expose-Headers', 'Authorization');
@@ -51,10 +51,7 @@ const JWT_SECRET = "TP-CNAM";
 $app->get('/api/hello/{name}', function (Request $request, Response $response, $args) {
     $array = [];
     $array ["nom"] = $args ['name'];
-    
     $response->getBody()->write(json_encode ($array));
-    $response = addHeaders ($response);
-    $response = createJwT ($response);
     return $response;
 });
 
