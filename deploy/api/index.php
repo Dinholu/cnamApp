@@ -17,9 +17,4 @@ $app->get('/api/hello/{name}', function (Request $request, Response $response, $
     return $response;
 });
 
-
-
-
-
-$app->add();
 $app->run ();
