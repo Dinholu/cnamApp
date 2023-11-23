@@ -127,13 +127,10 @@ function getUtilisateur(Request $request, Response $response, $args)
 function postLogin(Request $request, Response $response, $args)
 {
   $database = '{"login":"emma","password":"toto"}';
-  if ($request->withAttribute('login') == 'emma') {
-    $flux = '{"nom":"Stones","prenom":"Emma"}';
-    $response = createJwT($response);
-    $response->getBody()->write($flux);
-  } else {
-    $response = $response->withStatus(401);
-  }
+  $body = $request->getBody();
+  $flux = '{"nom":"Stones","prenom":"Emma"}';
+  $response = createJwT($response);
+  $response->getBody()->write($flux, $database, $body);
 
   return addHeaders($response);
 }
