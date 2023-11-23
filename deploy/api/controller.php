@@ -127,6 +127,7 @@ function getUtilisateur(Request $request, Response $response, $args)
 function postLogin(Request $request, Response $response, $args)
 {
   $database = '{"login":"emma","password":"toto"}';
+  dd($request->getBody());
   if ($request->getBody() == $database) {
     $flux = '{"nom":"Stones","prenom":"Emma"}';
     $response = createJwT($response);
