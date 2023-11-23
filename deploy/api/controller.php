@@ -126,11 +126,9 @@ function getUtilisateur(Request $request, Response $response, $args)
 // APi d'authentification générant un JWT
 function postLogin(Request $request, Response $response, $args)
 {
-  $database = '{"login":"emma","password":"toto"}';
-  $body = $request->getBody();
-  $flux = '{"nom":"Stones","prenom":"Emma"}';
+  $flux = '{"nom":"martin","prenom":"jean"}';
   $response = createJwT($response);
-  $response->getBody()->write($flux, $database, $body);
+  $response->getBody()->write($flux);
 
   return addHeaders($response);
 }
