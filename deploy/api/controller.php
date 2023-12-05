@@ -123,18 +123,21 @@ function getUtilisateur(Request $request, Response $response, $args)
   return addHeaders($response);
 }
 
-// APi d'authentification générant un JWT
 function postLogin(Request $request, Response $response, $args)
 {
   $flux = '{"nom":"Stones","prenom":"emma"}';
   $database = 'login=emma&password=toto';
-  if ($request->getBody()->getContents() == $database) {
+
+  parse_str($request->getBody()->getContents(), $requestData);
+
+  parse_str($database, $databaseData);
+
+  if ($requestData['login'] == $databaseData['login'] && $requestData['password'] == $databaseData['password']) {
     $response = createJwT($response);
     $response->getBody()->write($flux);
   } else {
     $response = $response->withStatus(401);
   }
-
 
   return addHeaders($response);
 }
