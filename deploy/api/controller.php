@@ -20,11 +20,20 @@ function hello(Request $request, Response $response, $args)
   return $response;
 }
 
-function  getSearchCalatogue(Request $request, Response $response, $args)
+function getSearchCatalogue(Request $request, Response $response, $args)
 {
-  $flux = '[{"titre":"linux","ref":"001","prix":"20"},{"titre":"java","ref":"002","prix":"21"},{"titre":"windows","ref":"003","prix":"22"},{"titre":"angular","ref":"004","prix":"23"},{"titre":"unix","ref":"005","prix":"25"},{"titre":"javascript","ref":"006","prix":"19"},{"titre":"html","ref":"007","prix":"15"},{"titre":"css","ref":"008","prix":"10"}]';
+  $flux = file_get_contents("../assets/mock/produits.json");
+  $flux = json_decode($flux, true);
 
-  $response->getBody()->write($flux);
+  $filteredFlux = array_filter($flux, function ($item) use ($args) {
+    return strpos(strtolower($item['designation']), strtolower($args['filtre'])) !== false;
+  });
+
+  $filteredFlux = array_values($filteredFlux);
+
+  $jsonData = json_encode($filteredFlux);
+  $response = $response->withHeader('Content-Type', 'application/json');
+  $response->getBody()->write($jsonData);
 
   return addHeaders($response);
 }
@@ -32,72 +41,27 @@ function  getSearchCalatogue(Request $request, Response $response, $args)
 // API Nécessitant un Jwt valide
 function getCatalogue(Request $request, Response $response, $args)
 {
-  $flux = '[
-  {
-    "ref": "x001",
-    "designation": "angular",
-    "prix": 10.5,
-    "qte": 1
-  },
-  {
-    "ref": "x002",
-    "designation": "ubuntu",
-    "prix": 30.5,
-    "qte": 0
-  },
-  {
-    "ref": "x003",
-    "designation": "docker",
-    "prix": 40.5,
-    "qte": 2
-  },
-  {
-    "ref": "x004",
-    "designation": "java",
-    "prix": 50.5,
-    "qte": 1
-  },
-  {
-    "ref": "x005",
-    "designation": "php",
-    "prix": 60.5,
-    "qte": 5
-  },
-  {
-    "ref": "x006",
-    "designation": "mysql",
-    "prix": 70.5,
-    "qte": 1
-  },
-  {
-    "ref": "x007",
-    "designation": "mongodb",
-    "prix": 80.5,
-    "qte": 5
-  },
-  {
-    "ref": "x008",
-    "designation": "nodejs",
-    "prix": 90.5,
-    "qte": 5
-  },
-  {
-    "ref": "x009",
-    "designation": "expressjs",
-    "prix": 100.5,
-    "qte": 7
-  },
-  {
-    "ref": "x010",
-    "designation": "reactjs",
-    "prix": 110.5,
-    "qte": 8
+  $path = "../assets/mock/produits.json";
+
+  if (file_exists($path)) {
+    $jsonContent = file_get_contents($path);
+
+    $data = json_decode(
+      $jsonContent,
+      true
+    );
+
+    if ($data !== null) {
+      $jsonData = json_encode($data);
+
+      $response = $response->withHeader('Content-Type', 'application/json');
+
+      $response->getBody()->write($jsonData);
+
+      return $response;
+    }
   }
-]';
-
-  $response->getBody()->write($flux);
-
-  return addHeaders($response);
+  return $response->withStatus(500)->getBody()->write("Erreur lors de la récupération du catalogue.");
 }
 
 function optionsUtilisateur(Request $request, Response $response, $args)
@@ -125,19 +89,31 @@ function getUtilisateur(Request $request, Response $response, $args)
 
 function postLogin(Request $request, Response $response, $args)
 {
-  $flux = '{"nom":"Stones","prenom":"emma"}';
-  $database = 'login=emma&password=toto';
 
-  parse_str($request->getBody()->getContents(), $requestData);
+  $body = $request->getParsedBody();
 
-  parse_str($database, $databaseData);
+  if (isset($body['login']) && isset($body['password'])) {
+    $username = $body['login'];
+    $password = $body['password'];
 
-  if ($requestData['login'] == $databaseData['login'] && $requestData['password'] == $databaseData['password']) {
-    $response = createJwT($response);
-    $response->getBody()->write($flux);
-  } else {
-    $response = $response->withStatus(401);
+    if ($username === 'emma' && $password === 'toto') {
+      $token = createJWT($response);
+
+      $userData = [
+        'nom' => 'Watson',
+        'prenom' => 'Emma',
+      ];
+
+      $flux = json_encode($userData);
+
+      $response = createJwt($response, $token);
+
+      $response->getBody()->write($flux);
+
+      return addHeaders($response);
+    }
   }
 
-  return addHeaders($response);
+  $response->getBody()->write(json_encode(['error' => 'Identifiants incorrects']));
+  return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
 }
