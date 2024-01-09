@@ -2,7 +2,7 @@ RewriteEngine On
 RewriteBase /api
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^ /api/index.php [QSA,L]
+RewriteRule ^ /api/index.html [L]
 
 # Allow Cross-Origin Resource Sharing (CORS)
 Header always set Access-Control-Allow-Origin "*"
