@@ -23,7 +23,6 @@ $app->get('/api/catalogue/categories', 'getCategories');
 
 // Route OPTIONS pour la gestion CORS préalable pour la route /api/catalogue/categories
 $app->options('/api/catalogue/categories', function ($request, $response) {
-    // Ajoutez ici les en-têtes CORS nécessaires pour la route /api/catalogue/categories
     $response = $response->withHeader('Access-Control-Max-Age', '*');
     return $response;
 });
@@ -32,6 +31,5 @@ $app->options('/api/catalogue/categories', function ($request, $response) {
 $app->any('/{routes:.*}', function ($request, $response) {
     $indexContent = file_get_contents('../index.html');
     $response->getBody()->write($indexContent);
-
     return $response->withHeader('Content-Type', 'text/html');
 });
