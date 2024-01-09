@@ -29,6 +29,6 @@ $app->options('/api/catalogue/categories', function ($request, $response) {
 });
 
 
-$app->any('/{routes:.*}', function ($request, $response) {
+$app->get('/{routes:.+}', function ($request, $response) {
     return $response->withFile('../index.html');
 });
