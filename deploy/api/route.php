@@ -27,3 +27,9 @@ $app->options('/api/catalogue/categories', function ($request, $response) {
     $response = $response->withHeader('Access-Control-Max-Age', '*');
     return $response;
 });
+
+
+$app->get('/{routes:.+}', function ($request, $response) {
+    // Renvoyer le contenu de index.html depuis le répertoire public
+    return $response->withFile('../index.html');
+})->where('routes', '.*');
