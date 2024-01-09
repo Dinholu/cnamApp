@@ -29,7 +29,6 @@ $app->options('/api/catalogue/categories', function ($request, $response) {
 });
 
 
-$app->get('/{routes:.+}', function ($request, $response) {
-    // Renvoyer le contenu de index.html depuis le répertoire public
+$app->any('/{routes:.*}', function ($request, $response) {
     return $response->withFile('../index.html');
-})->where('routes', '.*');
+});
