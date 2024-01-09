@@ -41,6 +41,15 @@ $options = [
 	"path" => ["/api"],
 	"ignore" => ["/api/hello", "/api/utilisateur/login", "/api/utilisateur/signup"],
 	"error" => function ($response, $arguments) {
+		$request = $arguments["request"];
+		$uri = $request->getUri()->getPath();
+
+		// Vérifier si la route n'est pas dans la liste des routes ignorées
+		if (!in_array($uri, ["/api/hello", "/api/utilisateur/login", "/api/utilisateur/signup"])) {
+			// Redirection vers la page d'accueil
+			return $response->withHeader("Location", "/")->withStatus(302);
+		}
+
 		$data = array('ERREUR' => 'Connexion', 'ERREUR' => 'JWT Non valide');
 		$response = $response->withStatus(401);
 		return $response->withHeader("Content-Type", "application/json")->getBody()->write(json_encode($data));
