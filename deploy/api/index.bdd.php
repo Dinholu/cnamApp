@@ -38,7 +38,7 @@ function createJwt(Response $response): Response
     $userid = "emma";
     $email = "emma@emma.fr";
     $issuedAt = time();
-    $expirationTime = $issuedAt + 600; // jwt valid for 60 seconds from the issued time
+    $expirationTime = $issuedAt + 600;
     $payload = array(
         'userid' => $userid,
         'iat' => $issuedAt,

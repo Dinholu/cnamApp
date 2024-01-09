@@ -108,6 +108,41 @@ function getCategories(Request $request, Response $response)
 	return addHeaders($response);
 }
 
+function getCommandes(Request $request, Response $response, $args)
+{
+	global $entityManager;
+
+	$payload = getJWTToken($request);
+	$login  = $payload->userid;
+
+	$utilisateurRepository = $entityManager->getRepository('Utilisateurs');
+	$utilisateur = $utilisateurRepository->findOneBy(array('login' => $login));
+
+	$commandeRepository = $entityManager->getRepository('Commandes');
+	$commandes = $commandeRepository->findBy(array('utilisateur' => $utilisateur));
+
+	$data = [];
+
+	if ($utilisateur) {
+
+		foreach ($commandes as $commande) {
+			$date = $commande->getDate()->format('Y-m-d');
+			$data[] = [
+				'id' => $commande->getId(),
+				'date' => $date,
+				'produit' => $commande->getProduit()->getNom(),
+				'img' => $commande->getProduit()->getImg(),
+				'prix' => $commande->getProduit()->getPrix(),
+				'quantite' => $commande->getQuantite(),
+			];
+		}
+	} else {
+		$response = $response->withStatus(404);
+	}
+	$response->getBody()->write(json_encode($data));
+	return addHeaders($response);
+}
+
 // API Nécessitant un Jwt valide
 function getCatalogue(Request $request, Response $response, $args)
 {
@@ -167,14 +202,12 @@ function getUtilisateur(Request $request, Response $response, $args)
 	return addHeaders($response);
 }
 
-function getSignup(Request $request, Response $response)
+function postSignup(Request $request, Response $response)
 {
 	global $entityManager;
 	$err = false;
 	$body = $request->getBody();
 	$body = json_decode($body, true);
-	$response = addHeaders($response);
-	$response->getBody()->write(json_encode($body));
 
 	$nom = $body['nom'] ?? "";
 	$prenom = $body['prenom'] ?? "";
@@ -251,6 +284,58 @@ function getSignup(Request $request, Response $response)
 	return addHeaders($response);
 }
 
+function postPay(Request $request, Response $response, $args)
+{
+	global $entityManager;
+	$body = $request->getBody();
+	$body = json_decode($body, true);
+	$client = $body['client'] ?? "";
+	$panier = $body['panier'] ?? "";
+
+	if (!$client || !$panier) {
+		$response = $response->withStatus(400);
+		$response->getBody()->write("Client ou panier manquant");
+		return addHeaders($response);
+	}
+
+	$utilisateurRepository = $entityManager->getRepository('Utilisateurs');
+	$utilisateur = $utilisateurRepository->findOneBy(array('id' => $client['id']));
+	if (!$utilisateur) {
+		$response = $response->withStatus(404);
+		$response->getBody()->write("Client non trouvé");
+		return addHeaders($response);
+	}
+
+	$commande = new Commandes();
+	$commande->setDate(new \DateTime());
+	$commande->setUtilisateur($utilisateur);
+
+	foreach ($panier as $produit) {
+		$quantite = $produit['quantite'] ?? "";
+		$produitId = $produit['produit']['id'];
+		$quantite = $produit['quantite'];
+		$prod = $entityManager->find('Produits', $produitId);
+
+		if (!$produit) {
+			continue;
+		}
+
+		$commande = new Commandes();
+		$commande->setDate(new \DateTime());
+		$commande->setUtilisateur($utilisateur);
+		$commande->setProduit($prod);
+		$commande->setQuantite($quantite);
+
+
+		$entityManager->persist($commande);
+	}
+
+	$entityManager->flush();
+
+	$response = $response->withStatus(200);
+	$response->getBody()->write(json_encode(["message" => "Paiement effectué pour le client"]));
+	return addHeaders($response);
+}
 
 // APi d'authentification générant un JWT
 function postLogin(Request $request, Response $response, $args)
@@ -269,12 +354,11 @@ function postLogin(Request $request, Response $response, $args)
 	}
 	if (!$err) {
 		$utilisateurRepository = $entityManager->getRepository('Utilisateurs');
-		// verifier le hash du mot de passe
 		$utilisateur = $utilisateurRepository->findOneBy(array('login' => $login));
 		if ($utilisateur && password_verify($pass, $utilisateur->getPassword())) {
 			$response = addHeaders($response);
 			$response = createJwT($response);
-			$data = array('nom' => $utilisateur->getNom(), 'prenom' => $utilisateur->getPrenom());
+			$data = array('id' => $utilisateur->getId(), 'nom' => $utilisateur->getNom(), 'prenom' => $utilisateur->getPrenom());
 			$response->getBody()->write(json_encode($data));
 		} else {
 
