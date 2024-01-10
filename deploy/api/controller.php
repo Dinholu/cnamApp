@@ -6,8 +6,6 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 
 function optionsCatalogue(Request $request, Response $response, $args)
 {
-
-	// Evite que le front demande une confirmation à chaque modification
 	$response = $response->withHeader('Access-Control-Max-Age', '*');
 
 	return addHeaders($response);
@@ -15,8 +13,6 @@ function optionsCatalogue(Request $request, Response $response, $args)
 
 function optionsCategories(Request $request, Response $response, $args)
 {
-
-	// Evite que le front demande une confirmation à chaque modification
 	$response = $response->withHeader("Access-Control-Max-Age", 600);
 
 	return addHeaders($response);
@@ -34,12 +30,10 @@ function getSearchCatalogue(Request $request, Response $response)
 {
 	global $entityManager;
 
-	// Récupérer les paramètres de la requête
-	$params = $request->getQueryParams(); // Pour les paramètres GET
+	$params = $request->getQueryParams();
 	$term = $params['term'] ?? null;
 	$category = $params['category'] ?? null;
 
-	// Construire la requête de recherche en fonction des paramètres
 	$produitRepository = $entityManager->getRepository('Produits');
 	$queryBuilder = $produitRepository->createQueryBuilder('p');
 
@@ -55,7 +49,6 @@ function getSearchCatalogue(Request $request, Response $response)
 
 	$produits = $queryBuilder->getQuery()->getResult();
 
-	// Traitement des résultats et réponse
 	if ($produits) {
 		$data = [];
 		foreach ($produits as $produit) {
@@ -69,7 +62,6 @@ function getSearchCatalogue(Request $request, Response $response)
 			);
 		}
 
-		// Envoi de la réponse une seule fois après la boucle
 		$response = addHeaders($response);
 		$response = createJwT($response);
 		$response->getBody()->write(json_encode($data));
@@ -85,10 +77,6 @@ function getCategories(Request $request, Response $response)
 {
 	global $entityManager;
 
-	$payload = getJWTToken($request);
-	$login  = $payload->userid;
-
-
 	$categorieRepository = $entityManager->getRepository('Categories');
 	$categories = $categorieRepository->findAll();
 	$data = [];
@@ -102,13 +90,12 @@ function getCategories(Request $request, Response $response)
 	} else {
 		$response = $response->withStatus(404);
 	}
-
 	$response->getBody()->write(json_encode($data));
 
 	return addHeaders($response);
 }
 
-function getCommandes(Request $request, Response $response, $args)
+function getCommandes(Request $request, Response $response)
 {
 	global $entityManager;
 
@@ -206,6 +193,7 @@ function postSignup(Request $request, Response $response)
 {
 	global $entityManager;
 	$err = false;
+	$erreur = [];
 	$body = $request->getBody();
 	$body = json_decode($body, true);
 
@@ -221,34 +209,44 @@ function postSignup(Request $request, Response $response)
 	$tel = $body['telephone'] ?? "";
 
 	// Validation des données
-	if (!preg_match("/[a-zA-Z0-9]{1,20}/", $nom)) {
+	if (!preg_match("/[a-zA-Z0-9]{3,20}/", $nom)) {
+		$err = true;
+		array_push($erreur, "Le nom est invalide. Il doit contenir au moins 5 lettres.");
+	}
+	if (!preg_match("/[a-zA-Z0-9]{3,20}/", $prenom)) {
+		array_push($erreur, "Le prenom est invalide. Il doit contenir au moins 5 lettres.");
 		$err = true;
 	}
-	if (!preg_match("/[a-zA-Z0-9]{1,20}/", $prenom)) {
+	if (!preg_match("/[a-zA-Z0-9]{5,20}/", $adresse)) {
+		$err = true;
+		array_push($erreur, "L'adresse est invalide. Elle doit contenir au moins 5 lettres.");
+	}
+	if (!preg_match("/[0-9]{5}/", $cp)) {
+		array_push($erreur, "Le code postal est invalide. Il doit contenir uniquement 5 chiffres.");
 		$err = true;
 	}
-	if (!preg_match("/[a-zA-Z0-9]{1,20}/", $adresse)) {
-		$err = true;
-	}
-	if (!preg_match("/[a-zA-Z0-9]{1,20}/", $cp)) {
-		$err = true;
-	}
-	if (!preg_match("/[a-zA-Z0-9]{1,20}/", $ville)) {
+	if (!preg_match("/[a-zA-Z0-9]{5,20}/", $ville)) {
+		array_push($erreur, "La ville est invalide. Elle doit contenir au moins 5 lettres.");
 		$err = true;
 	}
 	if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+		array_push($erreur, "L'email est invalide. Elle doit contenir un '.' et un '@'.");
 		$err = true;
 	}
 	if (!preg_match("/[a-zA-Z0-9]{1,20}/", $sexe)) {
+		array_push($erreur, "Le sexe est invalide.");
 		$err = true;
 	}
 	if (!preg_match("/[a-zA-Z0-9]{1,20}/", $login)) {
+		array_push($erreur, "Le login est invalide. Il doit contenir uniquement des chiffres et des lettres.");
 		$err = true;
 	}
 	if (strlen($pass) < 8 || !preg_match('/[A-Z]/', $pass) || !preg_match('/[a-z]/', $pass) || !preg_match('/[0-9]/', $pass)) {
+		array_push($erreur, "Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule et un chiffre.");
 		$err = true;
 	}
 	if (!preg_match("/[a-zA-Z0-9]{1,20}/", $tel)) {
+		array_push($erreur, "Le numéro de téléphone est invalide. Il doit contenir uniquement des chiffres.");
 		$err = true;
 	}
 
@@ -257,8 +255,8 @@ function postSignup(Request $request, Response $response)
 
 		if ($existingUser) {
 			$response = $response->withStatus(409);
-			// cleaner le body 
-			$response->getBody()->write(json_encode('Le login est deja utilise. Veuillez en choisir un autre.'));
+			array_push($erreur, "Le login est deja utilise. Veuillez en choisir un autre.");
+			$response->getBody()->write(json_encode($erreur));
 		} else {
 			$hashedPassword = password_hash($pass, PASSWORD_DEFAULT);
 			$user = new Utilisateurs();
@@ -275,9 +273,12 @@ function postSignup(Request $request, Response $response)
 			$entityManager->persist($user);
 			$entityManager->flush();
 			$response = createJwT($response);
-			$response->getBody();
+			$data = array('id' => $user->getId(), 'nom' => $user->getNom(), 'prenom' => $user->getPrenom());
+
+			$response->getBody()->write(json_encode($data));
 		}
 	} else {
+		$response->getBody()->write(json_encode($erreur));
 		$response = $response->withStatus(500);
 	}
 
@@ -325,19 +326,15 @@ function postPay(Request $request, Response $response, $args)
 		$commande->setUtilisateur($utilisateur);
 		$commande->setProduit($prod);
 		$commande->setQuantite($quantite);
-
-
 		$entityManager->persist($commande);
 	}
 
 	$entityManager->flush();
-
 	$response = $response->withStatus(200);
 	$response->getBody()->write(json_encode(["message" => "Paiement effectué pour le client"]));
 	return addHeaders($response);
 }
 
-// APi d'authentification générant un JWT
 function postLogin(Request $request, Response $response, $args)
 {
 	global $entityManager;
